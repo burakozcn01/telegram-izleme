@@ -1,0 +1,4 @@
+.env
+telegram_session*
+telegram_monitor*
+joined_channels*

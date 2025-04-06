@@ -1,0 +1,871 @@
+{% extends "layout.html" %}
+
+{% block title %}İstatistikler - Telegram Kanal İzleme{% endblock %}
+
+{% block content %}
+<div class="col-md-12">
+    <div class="page-header">
+        <h3 class="page-title"><i class="bi bi-graph-up me-2"></i>İstatistik Paneli</h3>
+        <div class="actions-group">
+            <button id="refreshStats" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-clockwise me-1"></i> Yenile
+            </button>
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dateRangeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-calendar3 me-1"></i> Son 7 Gün
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dateRangeDropdown">
+                    <li><button class="dropdown-item active" data-range="7">Son 7 Gün</button></li>
+                    <li><button class="dropdown-item" data-range="14">Son 14 Gün</button></li>
+                    <li><button class="dropdown-item" data-range="30">Son 30 Gün</button></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><button class="dropdown-item" data-range="custom">Özel Aralık</button></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div id="stats-loading" class="text-center py-5 d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Yükleniyor...</span>
+        </div>
+        <p class="mt-3 text-muted">İstatistikler yükleniyor...</p>
+    </div>
+    
+    <div id="stats-content">
+        <div class="row mb-4">
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card bg-white text-dark h-100">
+                    <div class="card-body d-flex align-items-center p-4">
+                        <div class="flex-shrink-0 me-3 bg-primary rounded-3 p-3 text-white">
+                            <i class="bi bi-bell fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle mb-1 text-muted">Toplam Uyarı</h6>
+                            <h2 class="card-title mb-0" id="totalAlertCount">0</h2>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 text-end">
+                        <a href="/" class="text-decoration-none">
+                            <small>Tüm Uyarılar <i class="bi bi-chevron-right"></i></small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card bg-white text-dark h-100">
+                    <div class="card-body d-flex align-items-center p-4">
+                        <div class="flex-shrink-0 me-3 bg-success rounded-3 p-3 text-white">
+                            <i class="bi bi-calendar-check fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle mb-1 text-muted">Bugünkü Uyarılar</h6>
+                            <h2 class="card-title mb-0" id="todayAlertCount">0</h2>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 text-end">
+                        <span class="text-success" id="todayPercentage">
+                            <i class="bi bi-arrow-up"></i> <span>0%</span>
+                        </span>
+                        <small class="text-muted ms-2">dünden</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card bg-white text-dark h-100">
+                    <div class="card-body d-flex align-items-center p-4">
+                        <div class="flex-shrink-0 me-3 bg-info rounded-3 p-3 text-white">
+                            <i class="bi bi-tag fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle mb-1 text-muted">Kategori Sayısı</h6>
+                            <h2 class="card-title mb-0" id="categoryCount">0</h2>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 text-end">
+                        <a href="/keywords" class="text-decoration-none">
+                            <small>Anahtar Kelimeler <i class="bi bi-chevron-right"></i></small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card bg-white text-dark h-100">
+                    <div class="card-body d-flex align-items-center p-4">
+                        <div class="flex-shrink-0 me-3 bg-secondary rounded-3 p-3 text-white">
+                            <i class="bi bi-chat-dots fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle mb-1 text-muted">İzlenen Kanallar</h6>
+                            <h2 class="card-title mb-0" id="channelCount">0</h2>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 text-end">
+                        <a href="/channels" class="text-decoration-none">
+                            <small>Kanal Listesi <i class="bi bi-chevron-right"></i></small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-lg-8 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-graph-up me-2 text-primary"></i>Uyarı Trendi
+                        </h5>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-primary active" data-chart-view="daily">Günlük</button>
+                            <button type="button" class="btn btn-outline-primary" data-chart-view="weekly">Haftalık</button>
+                            <button type="button" class="btn btn-outline-primary" data-chart-view="monthly">Aylık</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 300px;">
+                            <canvas id="alertTrendChart"></canvas>
+                        </div>
+                        <div class="d-flex justify-content-center mt-3 chart-loading d-none">
+                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                            <span class="text-muted">Grafik yükleniyor...</span>
+                        </div>
+                        <div class="text-center mt-3 chart-error d-none">
+                            <i class="bi bi-exclamation-triangle text-warning"></i>
+                            <span class="text-muted">Veriler yüklenirken bir hata oluştu.</span>
+                            <button class="btn btn-sm btn-link">Tekrar Dene</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-pie-chart me-2 text-primary"></i>Kategori Dağılımı
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 300px;">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                        <div id="categoryLegend" class="d-flex flex-wrap justify-content-center mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-7 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-bar-chart me-2 text-primary"></i>En Aktif Kanallar
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 300px;">
+                            <canvas id="channelChart"></canvas>
+                        </div>
+                        <div class="text-center small text-muted mt-3">
+                            En fazla uyarı içeren ilk 10 kanal gösterilmektedir.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-clock me-2 text-primary"></i>Saatlik Uyarı Dağılımı
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 300px;">
+                            <canvas id="hourlyChart"></canvas>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted mt-3">
+                            <span>00:00</span>
+                            <span>06:00</span>
+                            <span>12:00</span>
+                            <span>18:00</span>
+                            <span>23:59</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="dateRangeModal" tabindex="-1" aria-labelledby="dateRangeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dateRangeModalLabel">Özel Tarih Aralığı Seçin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="dateRangeForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="startDate" class="form-label">Başlangıç Tarihi</label>
+                            <input type="date" class="form-control" id="startDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="endDate" class="form-label">Bitiş Tarihi</label>
+                            <input type="date" class="form-control" id="endDate" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" id="applyDateRange">Uygula</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date();
+        const todayStr = today.toISOString().substr(0, 10);
+        document.getElementById('endDate').max = todayStr;
+        document.getElementById('startDate').max = todayStr;
+        
+        document.getElementById('endDate').value = todayStr;
+        
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(today.getDate() - 7);
+        document.getElementById('startDate').value = sevenDaysAgo.toISOString().substr(0, 10);
+        
+        let trendChart = null;
+        let categoryChart = null;
+        let channelChart = null;
+        let hourlyChart = null;
+        
+        const chartColors = {
+            primary: 'rgba(0, 136, 204, 1)',
+            primaryLight: 'rgba(0, 136, 204, 0.2)',
+            success: 'rgba(46, 204, 113, 1)',
+            warning: 'rgba(243, 156, 18, 1)',
+            danger: 'rgba(231, 76, 60, 1)',
+            info: 'rgba(52, 152, 219, 1)',
+            secondary: 'rgba(108, 117, 125, 1)',
+            categoryColors: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)',
+                'rgba(255, 99, 255, 1)',
+                'rgba(54, 162, 64, 1)',
+                'rgba(192, 206, 86, 1)',
+                'rgba(75, 192, 255, 1)'
+            ]
+        };
+        
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        
+        function showLoading() {
+            document.getElementById('stats-loading').classList.remove('d-none');
+            document.getElementById('stats-content').classList.add('d-none');
+        }
+        
+        function hideLoading() {
+            document.getElementById('stats-loading').classList.add('d-none');
+            document.getElementById('stats-content').classList.remove('d-none');
+        }
+        
+        function loadData(range = 7) {
+            let alertsData = [];
+            
+            showLoading();
+            
+            fetch('/alerts')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Uyarılar yüklenirken bir hata oluştu');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alertsData = data;
+                    hideLoading();
+                    processData(alertsData, range);
+                })
+                .catch(error => {
+                    hideLoading();
+                    
+                    const errorAlert = document.createElement('div');
+                    errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+                    errorAlert.innerHTML = `
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Hata:</strong> ${error.message || 'Veriler yüklenirken bir hata oluştu'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    document.querySelector('.page-header').insertAdjacentElement('afterend', errorAlert);
+                });
+        }
+        
+        function processData(alerts, range = 7) {
+            let categories = new Set();
+            let channels = new Set();
+
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+            
+            const startDate = new Date();
+            startDate.setDate(today.getDate() - range);
+            startDate.setHours(0, 0, 0, 0);
+            
+            const filteredAlerts = alerts.filter(alert => {
+                const alertDate = new Date(alert.timestamp);
+                return alertDate >= startDate && alertDate <= today;
+            });
+            
+            filteredAlerts.forEach(alert => {
+                if (alert.categories) {
+                    alert.categories.forEach(category => categories.add(category));
+                }
+                
+                if (alert.chat) {
+                    channels.add(alert.chat);
+                }
+            });
+            
+            document.getElementById('totalAlertCount').textContent = formatNumber(alerts.length);
+            document.getElementById('categoryCount').textContent = formatNumber(categories.size);
+            document.getElementById('channelCount').textContent = formatNumber(channels.size);
+            
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            
+            const todayAlerts = alerts.filter(alert => {
+                const alertDate = new Date(alert.timestamp);
+                return alertDate >= todayStart;
+            });
+            
+            document.getElementById('todayAlertCount').textContent = formatNumber(todayAlerts.length);
+            
+            const yesterdayStart = new Date();
+            yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+            yesterdayStart.setHours(0, 0, 0, 0);
+            
+            const yesterdayEnd = new Date();
+            yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+            yesterdayEnd.setHours(23, 59, 59, 999);
+            
+            const yesterdayAlerts = alerts.filter(alert => {
+                const alertDate = new Date(alert.timestamp);
+                return alertDate >= yesterdayStart && alertDate <= yesterdayEnd;
+            });
+            
+            if (yesterdayAlerts.length > 0) {
+                const percentageChange = ((todayAlerts.length - yesterdayAlerts.length) / yesterdayAlerts.length) * 100;
+                const percentageElement = document.getElementById('todayPercentage');
+                
+                if (percentageChange > 0) {
+                    percentageElement.className = 'text-success';
+                    percentageElement.innerHTML = `<i class="bi bi-arrow-up"></i> ${percentageChange.toFixed(1)}%`;
+                } else if (percentageChange < 0) {
+                    percentageElement.className = 'text-danger';
+                    percentageElement.innerHTML = `<i class="bi bi-arrow-down"></i> ${Math.abs(percentageChange).toFixed(1)}%`;
+                } else {
+                    percentageElement.className = 'text-muted';
+                    percentageElement.innerHTML = `<i class="bi bi-dash"></i> 0%`;
+                }
+            }
+            
+            generateTrendChart(filteredAlerts);
+            generateCategoryChart(filteredAlerts);
+            generateChannelChart(filteredAlerts);
+            generateHourlyChart(filteredAlerts);
+        }
+        
+        function generateTrendChart(alerts) {
+            if (trendChart) {
+                trendChart.destroy();
+            }
+            
+            const dates = [];
+            const counts = [];
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                date.setHours(0, 0, 0, 0);
+                
+                const nextDate = new Date(date);
+                nextDate.setDate(nextDate.getDate() + 1);
+                
+                const dateString = date.toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' });
+                
+                const dayAlerts = alerts.filter(alert => {
+                    const alertDate = new Date(alert.timestamp);
+                    return alertDate >= date && alertDate < nextDate;
+                });
+                
+                dates.push(dateString);
+                counts.push(dayAlerts.length);
+            }
+            
+            const ctx = document.getElementById('alertTrendChart').getContext('2d');
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Uyarı Sayısı',
+                        data: counts,
+                        backgroundColor: chartColors.primaryLight,
+                        borderColor: chartColors.primary,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: chartColors.primary,
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.7)',
+                            padding: 10,
+                            titleFont: {
+                                size: 14
+                            },
+                            bodyFont: {
+                                size: 14
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    return `Uyarı Sayısı: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            ticks: {
+                                precision: 0,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function generateCategoryChart(alerts) {
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+            
+            const categoryData = {};
+            
+            alerts.forEach(alert => {
+                if (alert.categories && alert.categories.length > 0) {
+                    alert.categories.forEach(category => {
+                        if (!categoryData[category]) {
+                            categoryData[category] = 0;
+                        }
+                        categoryData[category]++;
+                    });
+                } else {
+                    if (!categoryData["Diğer"]) {
+                        categoryData["Diğer"] = 0;
+                    }
+                    categoryData["Diğer"]++;
+                }
+            });
+            
+            const sortedCategories = Object.entries(categoryData)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8);
+            
+            const remainingCategories = Object.entries(categoryData)
+                .sort((a, b) => b[1] - a[1])
+                .slice(8);
+            
+            if (remainingCategories.length > 0) {
+                const otherCount = remainingCategories.reduce((sum, item) => sum + item[1], 0);
+                if (otherCount > 0) {
+                    sortedCategories.push(["Diğer", otherCount]);
+                }
+            }
+            
+            const labels = sortedCategories.map(item => item[0]);
+            const data = sortedCategories.map(item => item[1]);
+            
+            const backgroundColors = chartColors.categoryColors.slice(0, data.length);
+            
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.7)',
+                            padding: 10,
+                            titleFont: {
+                                size: 14
+                            },
+                            bodyFont: {
+                                size: 14
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.chart.data.datasets[0].data.reduce((sum, val) => sum + val, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${context.label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const legendContainer = document.getElementById('categoryLegend');
+            legendContainer.innerHTML = '';
+            
+            labels.forEach((label, i) => {
+                const percentage = Math.round((data[i] / data.reduce((sum, val) => sum + val, 0)) * 100);
+                const legendItem = document.createElement('div');
+                legendItem.className = 'me-3 mb-1';
+                legendItem.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <div style="width: 12px; height: 12px; background-color: ${backgroundColors[i]}; margin-right: 5px; border-radius: 2px;"></div>
+                        <small>${label} (${percentage}%)</small>
+                    </div>
+                `;
+                legendContainer.appendChild(legendItem);
+            });
+        }
+        
+        function generateChannelChart(alerts) {
+            if (channelChart) {
+                channelChart.destroy();
+            }
+            
+            const channelData = {};
+            
+            alerts.forEach(alert => {
+                if (!channelData[alert.chat]) {
+                    channelData[alert.chat] = 0;
+                }
+                channelData[alert.chat]++;
+            });
+            
+            const sortedChannels = Object.entries(channelData)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            const labels = sortedChannels.map(item => {
+                const channelName = item[0];
+                return channelName.length > 25 ? channelName.substring(0, 22) + '...' : channelName;
+            });
+            const data = sortedChannels.map(item => item[1]);
+            
+            const ctx = document.getElementById('channelChart').getContext('2d');
+            channelChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Uyarı Sayısı',
+                        data: data,
+                        backgroundColor: chartColors.info,
+                        borderColor: chartColors.info,
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        barPercentage: 0.5,
+                        categoryPercentage: 0.8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.7)',
+                            padding: 10,
+                            titleFont: {
+                                size: 14
+                            },
+                            bodyFont: {
+                                size: 14
+                            },
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const originalName = sortedChannels[tooltipItems[0].dataIndex][0];
+                                    return originalName;
+                                },
+                                label: function(context) {
+                                    return `Uyarı Sayısı: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            ticks: {
+                                precision: 0,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function generateHourlyChart(alerts) {
+            if (hourlyChart) {
+                hourlyChart.destroy();
+            }
+            
+            const hourlyData = Array(24).fill(0);
+            
+            alerts.forEach(alert => {
+                const date = new Date(alert.timestamp);
+                const hour = date.getHours();
+                hourlyData[hour]++;
+            });
+            
+            const labels = Array.from({length: 24}, (_, i) => i);
+            
+            const gradientFill = ctx => {
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(75, 192, 192, 0.6)');
+                gradient.addColorStop(1, 'rgba(75, 192, 192, 0.1)');
+                return gradient;
+            };
+            
+            const ctx = document.getElementById('hourlyChart').getContext('2d');
+            
+            hourlyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Uyarı Sayısı',
+                        data: hourlyData,
+                        backgroundColor: function(context) {
+                            const chart = context.chart;
+                            const {ctx, chartArea} = chart;
+                            if (!chartArea) {
+                                return null;
+                            }
+                            return gradientFill(ctx);
+                        },
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: 'rgba(75, 192, 192, 1)',
+                        pointBorderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.7)',
+                            padding: 10,
+                            titleFont: {
+                                size: 14
+                            },
+                            bodyFont: {
+                                size: 14
+                            },
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const hour = tooltipItems[0].label;
+                                    return `Saat: ${hour}:00 - ${hour}:59`;
+                                },
+                                label: function(context) {
+                                    return `Uyarı Sayısı: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            ticks: {
+                                precision: 0,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                callback: function(val, index) {
+                                    return index % 4 === 0 ? `${val}:00` : '';
+                                },
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        document.getElementById('refreshStats').addEventListener('click', function() {
+            const range = parseInt(document.querySelector('.dropdown-item.active').getAttribute('data-range'));
+            loadData(range);
+            
+            const toast = document.createElement('div');
+            toast.className = 'alert alert-success alert-dismissible fade show position-fixed bottom-0 end-0 m-3';
+            toast.style.zIndex = '1050';
+            toast.innerHTML = `
+                <i class="bi bi-check-circle-fill me-2"></i>
+                İstatistikler yenilendi
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        });
+        
+        const dateRangeItems = document.querySelectorAll('.dropdown-item[data-range]');
+        dateRangeItems.forEach(item => {
+            item.addEventListener('click', function() {
+                dateRangeItems.forEach(i => i.classList.remove('active'));
+                
+                this.classList.add('active');
+                
+                const rangeText = this.innerText;
+                document.getElementById('dateRangeDropdown').innerText = rangeText;
+                
+                if (this.getAttribute('data-range') === 'custom') {
+                    const dateRangeModal = new bootstrap.Modal(document.getElementById('dateRangeModal'));
+                    dateRangeModal.show();
+                } else {
+                    const range = parseInt(this.getAttribute('data-range'));
+                    loadData(range);
+                }
+            });
+        });
+        
+        document.getElementById('applyDateRange').addEventListener('click', function() {
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
+            
+            if (startDate > endDate) {
+                alert('Başlangıç tarihi, bitiş tarihinden sonra olamaz.');
+                return;
+            }
+            
+            const diffTime = Math.abs(endDate - startDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            
+            document.getElementById('dateRangeDropdown').innerHTML = `<i class="bi bi-calendar3 me-1"></i> Özel: ${startDate.toLocaleDateString('tr-TR')} - ${endDate.toLocaleDateString('tr-TR')}`;
+            
+            loadData(diffDays);
+            
+            const dateRangeModal = bootstrap.Modal.getInstance(document.getElementById('dateRangeModal'));
+            dateRangeModal.hide();
+        });
+        
+        const chartViewButtons = document.querySelectorAll('[data-chart-view]');
+        chartViewButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                chartViewButtons.forEach(btn => btn.classList.remove('active'));
+                
+                this.classList.add('active');
+                
+                alert('Bu özellik henüz uygulanmamıştır.');
+            });
+        });
+        
+        loadData(7);
+    });
+</script>
+{% endblock %}

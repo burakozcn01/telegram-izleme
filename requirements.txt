@@ -1,0 +1,8 @@
+flask
+markupsafe
+flask-socketio
+flask-login
+werkzeug
+telethon
+python-dotenv
+requests

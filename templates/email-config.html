@@ -1,0 +1,240 @@
+{% extends "layout.html" %}
+
+{% block title %}E-posta Ayarları - Telegram Kanal İzleme{% endblock %}
+
+{% block content %}
+<div class="col-md-12">
+    <div class="page-header">
+        <h3 class="page-title"><i class="bi bi-envelope me-2"></i>E-posta Bildirimleri Ayarları</h3>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex align-items-center">
+                    <i class="bi bi-envelope me-2"></i> E-posta Bildirimleri Yapılandırması
+                </div>
+                <div class="card-body">
+                    <form method="post" id="emailForm">
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" id="email_enabled" name="email_enabled" {% if email_enabled %}checked{% endif %}>
+                            <label class="form-check-label" for="email_enabled">E-posta Bildirimlerini Etkinleştir</label>
+                        </div>
+                        
+                        <div id="emailSettings" class="border rounded p-4 bg-light {% if not email_enabled %}d-none{% endif %}">
+                            <h5 class="border-bottom pb-3 mb-4">SMTP Sunucu Ayarları</h5>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="email_server" class="form-label">SMTP Sunucusu</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-hdd-network"></i></span>
+                                        <input type="text" class="form-control" id="email_server" name="email_server" value="{{ email_server }}" placeholder="örn: smtp.gmail.com">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email_port" class="form-label">SMTP Port</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-ethernet"></i></span>
+                                        <input type="number" class="form-control" id="email_port" name="email_port" value="{{ email_port }}" placeholder="örn: 587">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="email_username" class="form-label">E-posta Kullanıcı Adı</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                        <input type="email" class="form-control" id="email_username" name="email_username" value="{{ email_username }}" placeholder="örn: kullanici@gmail.com">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email_password" class="form-label">E-posta Şifresi (veya Uygulama Şifresi)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                                        <input type="password" class="form-control" id="email_password" name="email_password" placeholder="Değiştirmek için doldurun">
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h5 class="border-bottom pb-3 mb-4 mt-5">Bildirim Ayarları</h5>
+                            <div class="mb-4">
+                                <label for="email_from" class="form-label">Gönderen E-posta</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
+                                    <input type="email" class="form-control" id="email_from" name="email_from" value="{{ email_from }}" placeholder="örn: bildirim@sirketiniz.com">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="email_to" class="form-label">Alıcı E-postalar (virgülle ayırın)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-people"></i></span>
+                                    <input type="text" class="form-control" id="email_to" name="email_to" value="{{ email_to }}" placeholder="örn: alici1@mail.com, alici2@mail.com">
+                                </div>
+                                <div class="form-text">Birden fazla alıcı için e-posta adreslerini virgülle ayırın.</div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="high_priority_categories" class="form-label">Yüksek Öncelikli Kategoriler (virgülle ayırın)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-tags"></i></span>
+                                    <input type="text" class="form-control" id="high_priority_categories" name="high_priority_categories" value="{{ high_priority_categories }}" placeholder="örn: ACİL, ÖNEMLİ, TEHLİKE">
+                                </div>
+                                <div class="form-text">Sadece bu kategorilere ait uyarılar için e-posta bildirimi gönderilecektir. Boş bırakırsanız tüm uyarılar için bildirim gönderilir.</div>
+                            </div>
+                            
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="test_email" name="test_email">
+                                <label class="form-check-label" for="test_email">Kaydetme işleminden sonra test e-postası gönder</label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary" id="saveButton">
+                                <i class="bi bi-save me-2"></i>Ayarları Kaydet
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white d-flex align-items-center">
+                    <i class="bi bi-info-circle me-2"></i> Yardım ve İpuçları
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5><i class="bi bi-lightbulb me-2"></i>Gmail Kullanımı</h5>
+                        <p>Gmail kullanırken, aşağıdaki adımları takip etmeniz gerekir:</p>
+                        <ol>
+                            <li>SMTP Sunucusu: <code>smtp.gmail.com</code></li>
+                            <li>SMTP Port: <code>587</code></li>
+                            <li>Google hesabınızda "Daha az güvenli uygulama erişimi" özelliğini etkinleştirin veya bir uygulama şifresi oluşturun.</li>
+                        </ol>
+                        <a href="https://support.google.com/accounts/answer/185833" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-link-45deg me-1"></i>Uygulama Şifresi Oluşturma Rehberi
+                        </a>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5><i class="bi bi-patch-question me-2"></i>Sık Sorulan Sorular</h5>
+                        <div class="accordion" id="emailFAQ">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingOne">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                        Bildirim sıklığı nasıl ayarlanır?
+                                    </button>
+                                </h2>
+                                <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#emailFAQ">
+                                    <div class="accordion-body">
+                                        Şu anda bildirimler gerçek zamanlı olarak gönderilmektedir. Her yeni uyarı tespit edildiğinde bir e-posta alacaksınız. Toplu bildirim özelliği gelecek sürümlerde eklenecektir.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingTwo">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                        E-postalar neden spam klasörüne düşüyor?
+                                    </button>
+                                </h2>
+                                <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#emailFAQ">
+                                    <div class="accordion-body">
+                                        Bazı e-posta sağlayıcıları otomatik bildirimleri spam olarak işaretleyebilir. Spam klasörünüzü kontrol edin ve bildirimleri "spam değil" olarak işaretleyin. Ayrıca, gönderen e-posta adresini güvenilir gönderenler listenize ekleyin.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const enabledCheckbox = document.getElementById('email_enabled');
+        const emailSettings = document.getElementById('emailSettings');
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('email_password');
+        const emailForm = document.getElementById('emailForm');
+        const saveButton = document.getElementById('saveButton');
+        
+        enabledCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                emailSettings.classList.remove('d-none');
+                emailSettings.classList.add('d-block');
+            } else {
+                emailSettings.classList.remove('d-block');
+                emailSettings.classList.add('d-none');
+            }
+        });
+        
+        togglePasswordBtn.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            const eyeIcon = this.querySelector('i');
+            eyeIcon.classList.toggle('bi-eye');
+            eyeIcon.classList.toggle('bi-eye-slash');
+        });
+        
+        emailForm.addEventListener('submit', function(e) {
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Kaydediliyor...';
+        });
+        
+        const emailToInput = document.getElementById('email_to');
+        emailToInput.addEventListener('keyup', function(e) {
+            if (e.key === ',') {
+                const emails = this.value.split(',');
+                const lastEmail = emails[emails.length - 2]?.trim();
+                
+                if (lastEmail && !isValidEmail(lastEmail)) {
+                    this.classList.add('is-invalid');
+                    
+                    if (!document.getElementById('email-validation-message')) {
+                        const validationMessage = document.createElement('div');
+                        validationMessage.id = 'email-validation-message';
+                        validationMessage.className = 'invalid-feedback';
+                        validationMessage.textContent = `"${lastEmail}" geçerli bir e-posta adresi değil.`;
+                        this.parentNode.appendChild(validationMessage);
+                    } else {
+                        document.getElementById('email-validation-message').textContent = `"${lastEmail}" geçerli bir e-posta adresi değil.`;
+                    }
+                } else {
+                    this.classList.remove('is-invalid');
+                    const validationMessage = document.getElementById('email-validation-message');
+                    if (validationMessage) {
+                        validationMessage.remove();
+                    }
+                }
+            }
+        });
+        
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+    });
+</script>
+{% endblock %}

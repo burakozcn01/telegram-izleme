@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş - Telegram İzleme</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0088cc;
+            --primary-dark: #006da3;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            margin: auto;
+        }
+
+        .form-signin {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .brand-icon {
+            font-size: 3.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-signin h1 {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-floating {
+            margin-bottom: 1rem;
+        }
+
+        .form-floating:focus-within {
+            z-index: 2;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            height: calc(3.5rem + 2px);
+            font-size: 1rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(0, 136, 204, 0.25);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 136, 204, 0.35);
+        }
+
+        .alert {
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 576px) {
+            .login-container {
+                padding: 15px;
+            }
+
+            .form-signin {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="form-signin">
+            <div class="text-center mb-4">
+                <i class="bi bi-telegram brand-icon"></i>
+                <h1 class="h3 fw-normal">Telegram İzleme</h1>
+            </div>
+            
+            {% if error %}
+            <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
+            </div>
+            {% endif %}
+            
+            <form method="post" id="loginForm">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Kullanıcı Adı" required autofocus>
+                    <label for="username">Kullanıcı Adı</label>
+                </div>
+                <div class="form-floating mb-4">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Şifre" required>
+                    <label for="password">Şifre</label>
+                </div>
+                <button class="w-100 btn btn-lg btn-primary d-flex align-items-center justify-content-center" type="submit" id="loginBtn">
+                    <span>Giriş Yap</span>
+                </button>
+            </form>
+        </div>
+        <div class="text-center mt-4 text-muted">
+            <small>&copy; 2025 Telegram İzleme. Tüm hakları saklıdır.</small>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            form.addEventListener('submit', function() {
+                const btnText = loginBtn.innerHTML;
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Giriş Yapılıyor...';
+                
+                setTimeout(function() {
+                    form.submit();
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>

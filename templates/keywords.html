@@ -1,0 +1,297 @@
+{% extends "layout.html" %}
+
+{% block title %}Anahtar Kelimeler - Telegram Kanal İzleme{% endblock %}
+
+{% block content %}
+<div class="col-md-12">
+    <div class="page-header">
+        <h3 class="page-title"><i class="bi bi-tags me-2"></i>Anahtar Kelimeler</h3>
+        <div class="actions-group">
+            <button id="editKeywordsBtn" class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i> Düzenle
+            </button>
+            <form action="/reload" method="post" class="d-inline">
+                <button type="submit" class="btn btn-info text-white" data-bs-toggle="tooltip" title="Değişiklikleri aktif etmek için yeniden yükleyin">
+                    <i class="bi bi-arrow-repeat me-1"></i> Yeniden Yükle
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div id="keywordsView">
+        {% if keywords %}
+            <div class="row">
+                {% for category, words in keywords.items() %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white d-flex align-items-center">
+                            <i class="bi bi-tag me-2"></i>{{ category }}
+                            <span class="badge bg-light text-dark ms-auto">{{ words|length }}</span>
+                        </div>
+                        <div class="card-body">
+                            {% if words %}
+                                {% for word in words %}
+                                <span class="badge bg-secondary me-2 mb-2">{{ word }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">Bu kategoride henüz anahtar kelime bulunmamaktadır.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i> Henüz hiç anahtar kelime eklenmemiş. Düzenle butonuna tıklayarak kelime ekleyebilirsiniz.
+            </div>
+        {% endif %}
+        
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-lightbulb me-2"></i> Düzenleme için "Düzenle" düğmesine tıklayın. Değişiklikler "Kaydet" düğmesine bastıktan sonra etkinleşecektir.
+        </div>
+    </div>
+    
+    <div id="keywordsEdit" style="display: none;">
+        <form action="/keywords" method="post" id="keywordsForm">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex align-items-center">
+                    <i class="bi bi-code me-2"></i> Düzenleme Editörü
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="content" class="form-label">Anahtar Kelimeler İçeriği:</label>
+                        <textarea name="content" id="content" class="form-control font-monospace" style="height: 400px; resize: vertical;">{{ keywords_content }}</textarea>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <button type="button" id="cancelEditBtn" class="btn btn-secondary">
+                        <i class="bi bi-x me-1"></i> İptal
+                    </button>
+                    <div>
+                        <button type="button" id="validateBtn" class="btn btn-info text-white me-2">
+                            <i class="bi bi-check-circle me-1"></i> Doğrula
+                        </button>
+                        <button type="submit" id="saveBtn" class="btn btn-success">
+                            <i class="bi bi-save me-1"></i> Kaydet
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white d-flex align-items-center">
+                <i class="bi bi-info-circle me-2"></i> Format Bilgisi
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5><i class="bi bi-exclamation-triangle me-2"></i> Format Kuralları:</h5>
+                    <ul class="mb-0">
+                        <li>Her satır bir anahtar kelime içermelidir.</li>
+                        <li>Kategoriler <code>## KATEGORİ ADI</code> formatında belirtilmelidir.</li>
+                        <li># ile başlayan satırlar yorum olarak kabul edilir.</li>
+                        <li>Varsayılan kategori "GENEL" olarak adlandırılır.</li>
+                        <li>Boş satırlar dikkate alınmaz.</li>
+                    </ul>
+                </div>
+                
+                <h5 class="mt-4">Örnek Format:</h5>
+                <pre class="bg-light p-3 rounded-3"><code>## ACİL DURUM
+kaza
+deprem
+patlama
+
+## EKONOMİ
+dolar
+euro
+borsa
+
+# Bu bir yorum satırıdır
+## GENEL
+önemli
+acil
+duyuru</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editBtn = document.getElementById('editKeywordsBtn');
+    const cancelBtn = document.getElementById('cancelEditBtn');
+    const validateBtn = document.getElementById('validateBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const viewDiv = document.getElementById('keywordsView');
+    const editDiv = document.getElementById('keywordsEdit');
+    const contentTextarea = document.getElementById('content');
+    const originalContent = contentTextarea.value;
+    
+    function cleanTextareaContent() {
+        const lines = contentTextarea.value.split('\n');
+        const cleanedLines = [];
+        
+        let previousLineType = null; // null, 'category', 'keyword', 'comment', 'empty'
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            let currentLineType;
+            if (line === '') {
+                currentLineType = 'empty';
+            } else if (line.startsWith('##')) {
+                currentLineType = 'category';
+            } else if (line.startsWith('#')) {
+                currentLineType = 'comment';
+            } else {
+                currentLineType = 'keyword';
+            }
+            
+            if (currentLineType === 'empty') {
+                continue;
+            }
+            
+            if (currentLineType === 'category' && previousLineType !== null && previousLineType !== 'empty' && cleanedLines.length > 0) {
+                cleanedLines.push('');
+            }
+            
+            cleanedLines.push(line);
+            previousLineType = currentLineType;
+        }
+        
+        contentTextarea.value = cleanedLines.join('\n');
+    }
+    
+    document.getElementById('keywordsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        cleanTextareaContent();
+        this.submit();
+    });
+    
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    editBtn.addEventListener('click', function() {
+        viewDiv.style.display = 'none';
+        editDiv.style.display = 'block';
+        contentTextarea.focus();
+        
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+    
+    cancelBtn.addEventListener('click', function() {
+        if (contentTextarea.value !== originalContent) {
+            if (confirm('Değişiklikleriniz kaydedilmeyecek. Devam etmek istiyor musunuz?')) {
+                contentTextarea.value = originalContent;
+                editDiv.style.display = 'none';
+                viewDiv.style.display = 'block';
+            }
+        } else {
+            editDiv.style.display = 'none';
+            viewDiv.style.display = 'block';
+        }
+    });
+    
+    validateBtn.addEventListener('click', function() {
+        cleanTextareaContent();
+        
+        const content = contentTextarea.value.trim();
+        let isValid = true;
+        let validationMessages = [];
+        let currentCategory = 'GENEL';
+        
+        const lines = content.split('\n');
+        
+        lines.forEach((line, index) => {
+            line = line.trim();
+            
+            if (line === '' || (line.startsWith('#') && !line.startsWith('##'))) {
+                return;
+            }
+            
+            if (line.startsWith('##')) {
+                const category = line.substring(2).trim();
+                if (!category) {
+                    isValid = false;
+                    validationMessages.push(`Satır ${index + 1}: Kategori adı boş olamaz`);
+                }
+                currentCategory = category;
+            }
+            else if (line.indexOf('<') !== -1 || line.indexOf('>') !== -1) {
+                isValid = false;
+                validationMessages.push(`Satır ${index + 1}: "${line}" geçersiz HTML karakterleri içeriyor (< veya >)`);
+            }
+        });
+        
+        let resultAlert;
+        if (isValid) {
+            resultAlert = document.createElement('div');
+            resultAlert.className = 'alert alert-success alert-dismissible fade show mt-3';
+            resultAlert.innerHTML = `
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>Doğrulama Başarılı!</strong> Anahtar kelimeler doğru formatta.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+        } else {
+            resultAlert = document.createElement('div');
+            resultAlert.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            resultAlert.innerHTML = `
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Doğrulama Hatası!</strong> Lütfen aşağıdaki hataları düzeltin:
+                <ul class="mt-2 mb-0">
+                    ${validationMessages.map(msg => `<li>${msg}</li>`).join('')}
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+        }
+        
+        const existingAlert = document.querySelector('#keywordsForm .alert');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+        
+        document.getElementById('keywordsForm').insertAdjacentElement('afterend', resultAlert);
+        
+        setTimeout(() => {
+            if (resultAlert.parentNode) {
+                resultAlert.remove();
+            }
+        }, 10000);
+        
+        return isValid;
+    });
+    
+    contentTextarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            
+            this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+            
+            this.selectionStart = this.selectionEnd = start + 4;
+        }
+    });
+});
+</script>
+{% endblock %}
