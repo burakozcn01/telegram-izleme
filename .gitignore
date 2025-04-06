@@ -2,3 +2,5 @@
 telegram_session*
 telegram_monitor*
 joined_channels*
+__pycache__/
+instance/

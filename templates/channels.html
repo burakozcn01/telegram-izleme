@@ -1,11 +1,11 @@
 {% extends "layout.html" %}
 
-{% block title %}Kanallar - Telegram Kanal İzleme{% endblock %}
+{% block title %}Gruplar - Telegram İzleme{% endblock %}
 
 {% block content %}
 <div class="col-md-12">
     <div class="page-header">
-        <h3 class="page-title"><i class="bi bi-chat-dots me-2"></i>İzlenen Kanallar</h3>
+        <h3 class="page-title"><i class="bi bi-chat-dots me-2"></i>İzlenen Gruplar</h3>
         <div class="actions-group">
             <button id="editChannelsBtn" class="btn btn-primary">
                 <i class="bi bi-pencil me-1"></i> Düzenle
@@ -33,7 +33,7 @@
         {% if channels and channels|length > 0 %}
             <div class="card">
                 <div class="card-header bg-primary text-white d-flex align-items-center">
-                    <i class="bi bi-list-ul me-2"></i> Kanal Listesi 
+                    <i class="bi bi-list-ul me-2"></i> Grup Listesi 
                     <span class="badge bg-light text-dark ms-2">{{ channels|length }}</span>
                 </div>
                 <div class="card-body p-0">
@@ -41,7 +41,7 @@
                         <div class="col-12 mb-3">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                <input type="text" id="channelSearch" class="form-control" placeholder="Kanal ara...">
+                                <input type="text" id="channelSearch" class="form-control" placeholder="Grup ara...">
                             </div>
                         </div>
                     </div>
@@ -50,7 +50,7 @@
                         <div class="list-group-item channel-item">
                             <div class="d-flex align-items-center">
                                 <i class="bi bi-telegram text-primary me-2 fs-5"></i>
-                                <a href="{{ channel }}" target="_blank" class="text-decoration-none channel-link" data-bs-toggle="tooltip" title="Kanalı Telegram'da açmak için tıklayın">
+                                <a href="{{ channel }}" target="_blank" class="text-decoration-none channel-link" data-bs-toggle="tooltip" title="Grupı Telegram'da açmak için tıklayın">
                                     {{ channel }}
                                 </a>
                                 <span class="badge bg-light text-dark ms-auto status-badge">Aktif</span>
@@ -62,7 +62,7 @@
             </div>
         {% else %}
             <div class="alert alert-info">
-                <i class="bi bi-info-circle me-2"></i> Henüz hiç kanal eklenmemiş. Düzenle butonuna tıklayarak kanal ekleyebilirsiniz.
+                <i class="bi bi-info-circle me-2"></i> Henüz hiç Grup eklenmemiş. Düzenle butonuna tıklayarak Grup ekleyebilirsiniz.
             </div>
         {% endif %}
         
@@ -79,7 +79,7 @@
                 </div>
                 <div class="card-body">
                     <div class="form-group">
-                        <label for="content" class="form-label">Kanal Listesi İçeriği:</label>
+                        <label for="content" class="form-label">Grup Listesi İçeriği:</label>
                         <textarea name="content" id="content" class="form-control font-monospace" style="height: 400px; resize: vertical;">{{ channels_content }}</textarea>
                     </div>
                 </div>
@@ -107,189 +107,22 @@
                 <div class="alert alert-warning">
                     <h5><i class="bi bi-exclamation-triangle me-2"></i> Format Kuralları:</h5>
                     <ul class="mb-0">
-                        <li>Her satır bir kanal bağlantısı içermelidir (örn: https://t.me/kanaladi veya @kanaladi).</li>
+                        <li>Her satır bir Grup bağlantısı içermelidir (örn: https://t.me/Grupadi veya @Grupadi).</li>
                         <li># ile başlayan satırlar yorum olarak kabul edilir ve işlenmez.</li>
                         <li>Boş satırlar yok sayılır.</li>
                     </ul>
                 </div>
                 
                 <h5 class="mt-4">Örnek Format:</h5>
-                <pre class="bg-light p-3 rounded-3"><code># Resmi Kanallar
+                <pre class="bg-light p-3 rounded-3"><code># Resmi Gruplar
 https://t.me/example_channel
 @example_channel2
 
-# Haber Kanalları 
+# Haber Grupları 
 https://t.me/news_channel
 @another_channel</code></pre>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const editBtn = document.getElementById('editChannelsBtn');
-    const cancelBtn = document.getElementById('cancelEditBtn');
-    const validateBtn = document.getElementById('validateBtn');
-    const viewDiv = document.getElementById('channelsView');
-    const editDiv = document.getElementById('channelsEdit');
-    const contentTextarea = document.getElementById('content');
-    const originalContent = contentTextarea.value;
-    const channelSearch = document.getElementById('channelSearch');
-    
-    function cleanTextareaContent() {
-        const lines = contentTextarea.value.split('\n');
-        const cleanedLines = [];
-        
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            
-            if (line === '') {
-                continue;
-            }
-            
-            cleanedLines.push(line);
-        }
-        
-        contentTextarea.value = cleanedLines.join('\n');
-    }
-    
-    document.getElementById('channelsForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        cleanTextareaContent();
-        this.submit();
-    });
-    
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-    
-    editBtn.addEventListener('click', function() {
-        viewDiv.style.display = 'none';
-        editDiv.style.display = 'block';
-        contentTextarea.focus();
-        
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    });
-    
-    cancelBtn.addEventListener('click', function() {
-        if (contentTextarea.value !== originalContent) {
-            if (confirm('Değişiklikleriniz kaydedilmeyecek. Devam etmek istiyor musunuz?')) {
-                contentTextarea.value = originalContent;
-                editDiv.style.display = 'none';
-                viewDiv.style.display = 'block';
-            }
-        } else {
-            editDiv.style.display = 'none';
-            viewDiv.style.display = 'block';
-        }
-    });
-    
-    validateBtn.addEventListener('click', function() {
-        cleanTextareaContent();
-        
-        const content = contentTextarea.value.trim();
-        let isValid = true;
-        let validationMessages = [];
-        let validChannelCount = 0;
-        
-        const lines = content.split('\n');
-        
-        lines.forEach((line, index) => {
-            line = line.trim();
-            
-            if (line === '' || line.startsWith('#')) {
-                return;
-            }
-            
-            // Valid formats: https://t.me/channelname or @channelname
-            if (!line.startsWith('https://t.me/') && !line.startsWith('@')) {
-                isValid = false;
-                validationMessages.push(`Satır ${index + 1}: "${line}" geçersiz kanal formatı. "https://t.me/kanaladi" veya "@kanaladi" formatında olmalıdır.`);
-            } else {
-                validChannelCount++;
-            }
-        });
-        
-        let resultAlert;
-        if (isValid) {
-            resultAlert = document.createElement('div');
-            resultAlert.className = 'alert alert-success alert-dismissible fade show mt-3';
-            resultAlert.innerHTML = `
-                <i class="bi bi-check-circle-fill me-2"></i>
-                <strong>Doğrulama Başarılı!</strong> ${validChannelCount} adet geçerli kanal bulundu.
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            `;
-        } else {
-            resultAlert = document.createElement('div');
-            resultAlert.className = 'alert alert-danger alert-dismissible fade show mt-3';
-            resultAlert.innerHTML = `
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <strong>Doğrulama Hatası!</strong> Lütfen aşağıdaki hataları düzeltin:
-                <ul class="mt-2 mb-0">
-                    ${validationMessages.map(msg => `<li>${msg}</li>`).join('')}
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            `;
-        }
-        
-        const existingAlert = document.querySelector('#channelsForm .alert');
-        if (existingAlert) {
-            existingAlert.remove();
-        }
-        
-        document.getElementById('channelsForm').insertAdjacentElement('afterend', resultAlert);
-        
-        setTimeout(() => {
-            if (resultAlert.parentNode) {
-                resultAlert.remove();
-            }
-        }, 10000);
-        
-        return isValid;
-    });
-    
-    if (channelSearch) {
-        channelSearch.addEventListener('keyup', function() {
-            const searchText = this.value.toLowerCase();
-            const channelItems = document.querySelectorAll('.channel-item');
-            let visibleCount = 0;
-            
-            channelItems.forEach(item => {
-                const channelName = item.querySelector('.channel-link').textContent.trim().toLowerCase();
-                if (channelName.includes(searchText)) {
-                    item.style.display = '';
-                    visibleCount++;
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-            
-            let noResultsMessage = document.getElementById('noChannelsFound');
-            
-            if (visibleCount === 0 && searchText !== '') {
-                if (!noResultsMessage) {
-                    noResultsMessage = document.createElement('div');
-                    noResultsMessage.id = 'noChannelsFound';
-                    noResultsMessage.className = 'list-group-item text-center text-muted py-4';
-                    noResultsMessage.innerHTML = `
-                        <i class="bi bi-search display-4 d-block mb-3"></i>
-                        <h5>Sonuç Bulunamadı</h5>
-                        <p>Aramanızla eşleşen kanal bulunamadı.</p>
-                    `;
-                    document.getElementById('channelsList').appendChild(noResultsMessage);
-                }
-            } else if (noResultsMessage) {
-                noResultsMessage.remove();
-            }
-        });
-    }
-});
-</script>
 {% endblock %}

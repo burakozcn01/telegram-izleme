@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}E-posta Ayarları - Telegram Kanal İzleme{% endblock %}
+{% block title %}E-posta Ayarları - Telegram İzleme{% endblock %}
 
 {% block content %}
 <div class="col-md-12">
@@ -167,74 +167,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const enabledCheckbox = document.getElementById('email_enabled');
-        const emailSettings = document.getElementById('emailSettings');
-        const togglePasswordBtn = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('email_password');
-        const emailForm = document.getElementById('emailForm');
-        const saveButton = document.getElementById('saveButton');
-        
-        enabledCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                emailSettings.classList.remove('d-none');
-                emailSettings.classList.add('d-block');
-            } else {
-                emailSettings.classList.remove('d-block');
-                emailSettings.classList.add('d-none');
-            }
-        });
-        
-        togglePasswordBtn.addEventListener('click', function() {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            
-            const eyeIcon = this.querySelector('i');
-            eyeIcon.classList.toggle('bi-eye');
-            eyeIcon.classList.toggle('bi-eye-slash');
-        });
-        
-        emailForm.addEventListener('submit', function(e) {
-            saveButton.disabled = true;
-            saveButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Kaydediliyor...';
-        });
-        
-        const emailToInput = document.getElementById('email_to');
-        emailToInput.addEventListener('keyup', function(e) {
-            if (e.key === ',') {
-                const emails = this.value.split(',');
-                const lastEmail = emails[emails.length - 2]?.trim();
-                
-                if (lastEmail && !isValidEmail(lastEmail)) {
-                    this.classList.add('is-invalid');
-                    
-                    if (!document.getElementById('email-validation-message')) {
-                        const validationMessage = document.createElement('div');
-                        validationMessage.id = 'email-validation-message';
-                        validationMessage.className = 'invalid-feedback';
-                        validationMessage.textContent = `"${lastEmail}" geçerli bir e-posta adresi değil.`;
-                        this.parentNode.appendChild(validationMessage);
-                    } else {
-                        document.getElementById('email-validation-message').textContent = `"${lastEmail}" geçerli bir e-posta adresi değil.`;
-                    }
-                } else {
-                    this.classList.remove('is-invalid');
-                    const validationMessage = document.getElementById('email-validation-message');
-                    if (validationMessage) {
-                        validationMessage.remove();
-                    }
-                }
-            }
-        });
-        
-        function isValidEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
-        }
-    });
-</script>
 {% endblock %}

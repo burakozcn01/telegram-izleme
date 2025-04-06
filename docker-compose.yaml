@@ -1,0 +1,15 @@
+services:
+  telegram-monitor:
+    build: .
+    container_name: telegram-monitor
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./instance:/app/instance
+      - ./telegram_session.session:/app/telegram_session.session
+      - ./channels.txt:/app/channels.txt
+      - ./keyword.txt:/app/keyword.txt
+      - ./.env:/app/.env
+    environment:
+      - TZ=Europe/Istanbul

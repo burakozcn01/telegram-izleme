@@ -9,101 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #0088cc;
-            --primary-dark: #006da3;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        }
-
-        .login-container {
-            width: 100%;
-            max-width: 420px;
-            padding: 20px;
-            margin: auto;
-        }
-
-        .form-signin {
-            background-color: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-        }
-
-        .brand-icon {
-            font-size: 3.5rem;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .form-signin h1 {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 1.5rem;
-        }
-
-        .form-floating {
-            margin-bottom: 1rem;
-        }
-
-        .form-floating:focus-within {
-            z-index: 2;
-        }
-
-        .form-control {
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            padding: 12px;
-            height: calc(3.5rem + 2px);
-            font-size: 1rem;
-        }
-
-        .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.25rem rgba(0, 136, 204, 0.25);
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            font-weight: 500;
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-            border-color: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 136, 204, 0.35);
-        }
-
-        .alert {
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-        }
-
-        @media (max-width: 576px) {
-            .login-container {
-                padding: 15px;
-            }
-
-            .form-signin {
-                padding: 20px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body class="login-page">
     <div class="login-container">
         <div class="form-signin">
             <div class="text-center mb-4">
@@ -135,7 +43,7 @@
             <small>&copy; 2025 Telegram İzleme. Tüm hakları saklıdır.</small>
         </div>
     </div>
-
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('loginForm');

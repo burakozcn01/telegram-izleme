@@ -1,8 +1,15 @@
 flask
-markupsafe
 flask-socketio
 flask-login
+flask-sqlalchemy
+sqlalchemy
+markupsafe
 werkzeug
 telethon
 python-dotenv
 requests
+beautifulsoup4
+eventlet
+gevent
+python-engineio
+python-socketio
